@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>unTill POS AI Manager</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+  <!-- POS SCREEN (Background) -->
+  <div id="pos-view">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="flex items-center gap-6">
+        <div class="font-bold text-xl tracking-tight text-white">unTill POS AI Manager</div>
+        <div class="flex gap-2">
+          <!-- Nav buttons now trigger modals via JS -->
+          <button id="btn-manager" class="nav-btn">
+            <i class="fas fa-robot text-purple"></i> Manager AI
+          </button>
+          <button id="btn-guest" class="nav-btn">
+            <i class="fas fa-user-check text-white"></i> Gast AI
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-muted">
+        <span class="text-green-500"><i class="fas fa-wifi mr-1"></i> Online</span>
+        <span class="text-white"><i class="fas fa-user mr-1"></i> Mark</span>
+        <span id="clock" class="bg-[#333] px-2 py-1 rounded text-white">--:--</span>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="col-depts">
+        <h2 class="text-xs font-bold text-muted uppercase mb-2 pl-2">Departementen</h2>
+        <div id="dept-list" class="flex-1 overflow-y-auto pr-1"></div>
+      </div>
+
+      <div class="col-articles">
+        <h2 class="text-xs font-bold text-muted uppercase mb-2 pl-2">Artikelen: <span id="current-dept-name"
+            class="text-white">Hardlopers</span></h2>
+        <div id="article-list" class="article-grid"></div>
+      </div>
+
+      <div class="col-receipt">
+        <div class="receipt-header flex justify-between items-center cursor-pointer">
+          <div onclick="openGuestModal()">
+            <div class="text-lg font-bold text-white">Tafel 12 (Terras)</div>
+            <div class="text-xs text-muted font-bold">BON #8821 • ZONNIG</div>
+          </div>
+          <div class="text-right">
+            <!-- ADJUSTABLE GUEST COUNT -->
+            <div class="flex items-center gap-1 justify-end text-muted text-xs mb-1">
+              <button class="hover:text-white px-1" onclick="setGuestCount(guestCount - 1)">-</button>
+              <span id="guest-count-display">5 Pers</span>
+              <button class="hover:text-white px-1" onclick="setGuestCount(guestCount + 1)">+</button>
+            </div>
+            <div class="text-xs font-bold text-green-400"><span id="item-count">0</span> items</div>
+          </div>
+        </div>
+
+        <div id="receipt-list" class="receipt-list text-sm"></div>
+
+        <!-- AI HULP SECTION -->
+        <div class="ai-hulp-section">
+          <div class="ai-hulp-header">
+            <span class="ai-label"><i class="fas fa-robot"></i> AI Hulp</span>
+            <button class="btn-waiter-line" onclick="generateWaiterLine()">
+              <i class="fas fa-comment-dots"></i> Zin voor bediening
+            </button>
+          </div>
+          <div id="ai-suggestion-box" class="ai-box">
+            <span class="text-muted">Geen slimme suggesties op dit moment.</span>
+          </div>
+          <div id="ai-waiter-line" class="ai-waiter-box hidden"></div>
+        </div>
+
+        <div class="keypad">
+          <div class="flex justify-between items-end mb-2 px-1">
+            <span class="text-muted text-xs font-bold uppercase">Totaal</span>
+            <span id="total-price" class="text-2xl font-bold text-white">€ 0,00</span>
+          </div>
+          <div class="keypad-grid">
+            <button class="key-btn">1</button> <button class="key-btn">2</button> <button class="key-btn">3</button>
+            <button id="btn-backspace" class="key-btn" style="background:#FF7043; grid-row:span 2;"><i
+                class="fas fa-backspace"></i></button>
+            <button class="key-btn">4</button> <button class="key-btn">5</button> <button class="key-btn">6</button>
+            <button class="key-btn">7</button> <button class="key-btn">8</button> <button class="key-btn">9</button>
+            <button id="btn-checkout" class="key-btn" style="background:#66BB6A; grid-row:span 2;"><i
+                class="fas fa-check"></i></button>
+            <button class="key-btn" style="grid-column:span 2;">0</button> <button class="key-btn">.</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- GUEST MODAL (Popup Overlay) -->
+  <div id="guest-modal" class="overlay hidden">
+    <div class="modal-container guest-mockup-wrapper">
+
+      <!-- Header -->
+      <div class="guest-header">
+        <div class="flex items-center gap-3">
+          <div class="avatar-circle"><i class="fas fa-user"></i></div>
+          <div>
+            <div class="text-white font-bold text-lg">Gast: Fam. Jansen</div>
+            <div class="text-muted text-xs">Vaste Gast • Laatste bezoek: 3d geleden</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="gold-badge"><i class="fas fa-star"></i> GOLD MEMBER</div>
+          <div class="text-muted text-xs uppercase font-bold cursor-pointer"><i class="fas fa-bed mr-1"></i> Sleep hier
+          </div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="guest-body">
+        <!-- Top Row Cards -->
+        <div class="guest-top-row">
+          <!-- Context Card -->
+          <div class="g-card g-card-context">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <i class="fas fa-moon text-blue-300"></i>
+                <span class="text-blue-200 font-bold text-sm">Context: Zonnig / Helder (10°C)</span>
+              </div>
+              <div class="text-muted text-xs">Actueel weer via Buienradar/Meteo.</div>
+            </div>
+
+            <div class="info-stat-row">
+              <div class="info-stat-box alert-box-pulse">
+                <div class="text-xs font-bold text-red-400 uppercase mb-1"><i class="fas fa-exclamation-triangle"></i>
+                  Allergie</div>
+                <div class="text-white font-bold">Gluten</div>
+              </div>
+              <div class="info-stat-box">
+                <div class="text-xs font-bold text-blue-400 uppercase mb-1"><i class="fas fa-clock"></i> Besteed</div>
+                <div class="text-white font-bold">€ 65,00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommendation Card (Green) -->
+          <div class="g-card g-card-rec">
+            <!-- Rec Header -->
+            <div style="padding: 1rem 1rem 0 1rem;">
+              <div class="text-xs font-bold text-green-300 uppercase tracking-wider mb-2">
+                <i class="fas fa-coffee mr-1"></i> Koud / Regen
+              </div>
+            </div>
+
+            <!-- Carousel Content -->
+            <div class="rec-content">
+              <div class="rec-nav-btn" onclick="prevRec()"><i class="fas fa-chevron-left"></i></div>
+
+              <div class="rec-center">
+                <div class="rec-text">
+                  <h3 id="rec-title">Warme Choco + Slagroom</h3>
+                  <p id="rec-desc">Verwarmt met 78% succesratio bij regenachtig weer</p>
+                </div>
+                <button class="btn-add-rec" onclick="addRecToCart()">
+                  <i class="fas fa-plus-circle"></i> Toevoegen
+                </button>
+              </div>
+
+              <div class="rec-nav-btn" onclick="nextRec()"><i class="fas fa-chevron-right"></i></div>
+            </div>
+
+            <!-- Dots -->
+            <div class="flex justify-center pb-2 gap-1">
+              <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+              <div class="w-1.5 h-1.5 rounded-full bg-white opacity-40"></div>
+              <div class="w-1.5 h-1.5 rounded-full bg-white opacity-40"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Favorites Row -->
+        <div class="g-favorites-row">
+          <div class="text-xs font-bold text-red-300 uppercase tracking-wider mb-2"><i class="fas fa-heart"></i> Vaak
+            Besteld / Favorieten</div>
+          <div class="fav-btn-group">
+            <button class="fav-pill" onclick="quickAdd('Cappuccino')">Cappuccino</button>
+            <button class="fav-pill" onclick="quickAdd('Appeltaart')">Appeltaart</button>
+            <button class="fav-pill" onclick="quickAdd('Muntthee')">Muntthee</button>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="guest-actions-row">
+          <button class="action-btn btn-cancel" onclick="closeGuestModal()"><i class="fas fa-times"></i>
+            Annuleren</button>
+          <button class="action-btn btn-confirm" onclick="closeGuestModal()"><i class="fas fa-check"></i>
+            Bevestigen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- CONFIRMATION MODAL (Popup Overlay) -->
+  <div id="confirm-modal" class="overlay hidden">
+    <div class="confirm-container">
+      <!-- Icon -->
+      <div class="confirm-icon-circle">
+        <i class="fas fa-check"></i>
+      </div>
+
+      <h2 class="text-white font-bold text-2xl mt-4 mb-1">Bestelling Bevestigd!</h2>
+      <p class="text-muted text-sm mb-6">Verzonden naar Keuken & Bar</p>
+
+      <!-- Wait Time Box -->
+      <div class="wait-time-box">
+        <div class="text-xs font-bold text-muted uppercase tracking-wider mb-2">GESCHATTE WACHTTIJD</div>
+        <div class="text-5xl font-bold text-white mb-2">4 min</div>
+        <div class="text-xs font-bold text-green-400 uppercase tracking-wider">BAR: SNEL</div>
+      </div>
+
+      <!-- Time Stamp -->
+      <div id="confirm-timestamp" class="text-muted text-xs mt-3 mb-4">
+        Bevestigd om --:--
+      </div>
+
+      <button class="btn-close-confirm" onclick="closeConfirmModal()">SLUITEN</button>
+    </div>
+  </div>
+  </div>
+
+  <!-- MANAGER MODAL (Popup Overlay) -->
+  <div id="manager-modal" class="overlay hidden">
+    <div class="modal-container manager-mockup-wrapper">
+      <!-- Header -->
+      <div class="manager-header">
+        <div class="flex items-center gap-3">
+          <div class="bg-[#7C4DFF] w-8 h-8 rounded flex items-center justify-center text-white"><i
+              class="fas fa-robot"></i></div>
+          <div>
+            <div class="text-white font-bold text-lg">Manager AI Forecast</div>
+            <div class="text-muted text-xs">Real-time Data • Weather Integration • Historical Analysis</div>
+          </div>
+        </div>
+        <div class="text-muted cursor-pointer hover:text-white" onclick="closeManagerModal()"><i
+            class="fas fa-times text-xl"></i></div>
+      </div>
+
+      <!-- Body -->
+      <div class="manager-body">
+
+        <!-- Card 1: Crowd Forecast (Purple Theme) -->
+        <div class="m-card crowd-card">
+          <div class="card-bg-blur"></div>
+          <div class="card-header">
+            <h3 class="card-title">Verwachte Drukte (18:00 - 21:00)</h3>
+            <i class="fas fa-users text-gray-600"></i>
+          </div>
+
+          <div class="big-stat-row">
+            <span class="big-stat-val">+22%</span>
+            <span class="big-stat-sub">vs. gemiddeld</span>
+          </div>
+
+          <div class="ai-action-box">
+            <i class="fas fa-lightbulb text-yellow-400 mt-1"></i>
+            <div>
+              <div class="text-white font-bold text-sm mb-1 uppercase tracking-wide">AI Actiepunt</div>
+              <div class="text-gray-300 text-sm leading-tight" id="ai-crowd-text">
+                <span class="animate-pulse">Data analyseren...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Weather Forecast (Cyan Theme) -->
+        <div class="m-card weather-card">
+          <div class="card-header">
+            <h3 class="card-title">AI Weer Advies</h3>
+            <i class="fas fa-cloud-rain text-blue-500 text-xl"></i>
+          </div>
+
+          <!-- Content Container for JS Injection -->
+          <div id="ai-weather-content" class="weather-content">
+            <!-- Initial Loading State -->
+            <div class="h-full flex flex-col items-center justify-center text-gray-500 animate-pulse">
+              <i class="fas fa-satellite-dish fa-spin text-2xl mb-3"></i>
+              <span class="text-xs font-bold uppercase tracking-wider">Verbinden met KNMI...</span>
+            </div>
+
+            <!-- Card 3: Local Events (Orange Theme) -->
+            <div class="m-card events-card">
+              <div class="card-header">
+                <h3 class="card-title">Lokale Evenementen AI</h3>
+                <i class="fas fa-map-marker-alt text-orange-500 text-xl"></i>
+              </div>
+
+              <!-- Content Container for JS Injection -->
+              <div id="manager-events-card" class="h-full flex flex-col">
+                <div class="h-full flex flex-col items-center justify-center text-gray-500 animate-pulse">
+                  <span class="text-xs font-bold uppercase tracking-wider">Evenementen scannen...</span>
+                </div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <div id="manager-chart" class="bar-chart-flex">
+                <!-- Bars injected via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Local Events (Orange Theme) -->
+        <div class="m-card events-card">
+          <div class="card-header">
+            <h3 class="card-title">Lokale Evenementen AI</h3>
+            <i class="fas fa-map-marker-alt text-orange-500 text-xl"></i>
+          </div>
+
+          <!-- Content Container for JS Injection -->
+          <div id="manager-events-card" class="h-full flex flex-col">
+            <div class="h-full flex flex-col items-center justify-center text-gray-500 animate-pulse">
+              <span class="text-xs font-bold uppercase tracking-wider">Evenementen scannen...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Chart -->
+        <div class="chart-container">
+          <div id="manager-chart" class="bar-chart-flex">
+            <!-- Bars injected via JS -->
+          </div>
+        </div>
+
+
+        <script src="script.js"></script>
+</body>
+
+</html>
