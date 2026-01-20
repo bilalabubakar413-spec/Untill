@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reserveringen - unTill POS</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -22,7 +22,7 @@
                 <h1 class="text-white text-xl font-bold">Reserveringen</h1>
             </div>
             <!-- Terug knop -->
-            <a href="index.html" class="nav-btn text-muted hover:text-white"
+            <a href="{{ url_for('home') }}" class="nav-btn text-muted hover:text-white"
                 style="text-decoration: none; padding: 0.5rem 1rem;">
                 <i class="fas fa-arrow-left mr-2"></i> Terug naar Kassa
             </a>
@@ -74,7 +74,7 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 
 </html>
