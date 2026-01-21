@@ -1253,27 +1253,31 @@ function renderCommercialCard(weatherData) {
 
     // HTML Bouwen
 
-    // Titel
+    // Header Label
+    const headerLabel = document.createElement('div');
+    headerLabel.className = "comm-header-label";
+    headerLabel.innerText = "Commerciële Kans";
+
+    // Main Title (Italic, Big)
     const titleEl = document.createElement('h2');
-    titleEl.className = "text-white font-bold text-xl leading-tight mt-2 mb-2";
-    titleEl.style.textShadow = "0 0 10px rgba(124, 77, 255, 0.5)";
+    titleEl.className = "comm-main-title";
     titleEl.innerText = opportunity.title;
 
     // Suggestie Box
     const boxEl = document.createElement('div');
     boxEl.className = "action-product-box";
     boxEl.innerHTML = `
-        <div class="text-xs font-bold text-purple-300 uppercase mb-1">AI Suggestie:</div>
-        <div class="text-white font-bold text-sm">${opportunity.suggestion}</div>
-        <div class="text-xs text-gray-400 mt-1 italic">"${opportunity.reason}"</div>
+        <div class="action-label">Actie Product:</div>
+        <div class="action-product-name">${opportunity.suggestion}</div>
+        <div class="action-quote">"${opportunity.reason}"</div>
     `;
 
     // Footer Checklist
     const footerEl = document.createElement('div');
-    footerEl.className = "checklist-footer mt-auto";
+    footerEl.className = "checklist-footer";
     footerEl.innerHTML = `
-        <i class="fas fa-check-square text-green-400"></i>
-        <div class="uppercase font-bold text-[0.65rem] tracking-wide leading-tight text-gray-400">
+        <i class="fas fa-list-ul checklist-icon"></i>
+        <div class="checklist-text">
             ${opportunity.checklist}
         </div>
     `;
@@ -1282,6 +1286,7 @@ function renderCommercialCard(weatherData) {
     const contentContainer = document.getElementById('comm-content-container');
     if (contentContainer) {
         contentContainer.innerHTML = '';
+        contentContainer.appendChild(headerLabel);
         contentContainer.appendChild(titleEl);
         contentContainer.appendChild(boxEl);
         contentContainer.appendChild(footerEl);
