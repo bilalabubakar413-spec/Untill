@@ -735,35 +735,7 @@ function getSmartUpsellAdvice(cart, context) {
         }
     }
 
-    // 2. Geen specifieke product-pairing regel? Check dan Weer-advies (Start van bestelling)
-    // "Dat had je eerst ook": Als de bon nog leeg is of nog geen pairings heeft, geef weer-advies.
-    if (!context || !context.weather) {
-        // Fallback als context mist (zou niet moeten, maar voor veiligheid)
-    } else {
-        const w = context.weather;
-        // Checken of we een weersadvies moeten geven
-        // Als het regent en < 15 graden -> Warme Choco
-        const isRainy = (w.weather_code >= 51 && w.weather_code <= 67) || (w.weather_code >= 80 && w.weather_code <= 82);
-        const temp = w.temperature_2m || 10;
-
-        if (items.length <= 2) { // Alleen in beginstadium (niet storen als ze al 20 dingen bestellen)
-            if (isRainy || temp < 12) {
-                return {
-                    title: "Koud & Nat buiten?",
-                    reason: "Perfect weer voor een Warme Choco met Slagroom!",
-                    product: { name: "Warme Choco", price: 3.50, type: "drink" }
-                };
-            } else if (temp > 20) {
-                return {
-                    title: "Warm weer!",
-                    reason: "Een koude Ice Tea Green lest de dorst.",
-                    product: { name: "Ice Tea Green", price: 3.20, type: "drink" }
-                };
-            }
-        }
-    }
-
-    // 3. Geen specifieke regel? Check op 'Kale' bestellingen
+    // 2. Geen specifieke regel? Check op 'Kale' bestellingen
     const hasDrinks = items.some(i => i.type === 'drink');
     const hasFood = items.some(i => i.type === 'food');
 
@@ -1184,17 +1156,6 @@ const commercialOpportunities = [
         checklist: "Zet rozen op tafel en promoot de cocktailkaart."
     },
 
-    // --- CONCERT / EVENT KANSEN (Specific) ---
-    {
-        id: "lifetimes_party",
-        trigger: "event_match",
-        eventKeyword: "Katy Perry",
-        title: "LIFETIMES PRE-PARTY",
-        suggestion: "Katy Perry Pink Cocktail",
-        reason: "Concertbezoekers zoeken een sfeervolle plek voor pre-drinks; een thema-item verhoogt de aantrekkingskracht en omzet.",
-        checklist: "STEL EEN KATY PERRY PLAYLIST SAMEN EN ZORG VOOR VOLDOENDE KLEURRIJKE GARNERING VOOR DE THEMACOCKTAILS."
-    },
-
     // --- WEER EVENTS ---
     {
         id: "rainy_day",
@@ -1250,13 +1211,6 @@ function rankOpportunities(context) {
         if (match) return match;
     }
 
-    // A2. Check Local Events (Concerten etc)
-    // We kijken of er een event in localEvents zit dat matcht met een opportunity
-    for (const evt of localEvents) {
-        const match = commercialOpportunities.find(o => o.trigger === 'event_match' && evt.name.includes(o.eventKeyword));
-        if (match) return match;
-    }
-
     // B. Check Weer (Rain/Sun)
     // context.weatherCode komt van OpenMeteo (bv. > 50 is vaak regen/bewolkt)
     // We gebruiken de property 'rainy' die we in loadManagerData berekenen.
@@ -1299,31 +1253,31 @@ function renderCommercialCard(weatherData) {
 
     // HTML Bouwen
 
-    // Header Label
-    const headerLabel = document.createElement('div');
-    headerLabel.className = "comm-header-label";
-    headerLabel.innerText = "Commerciële Kans";
+    // Header Label Update
+    const headerLabel = container.querySelector('.card-header span');
+    if (headerLabel) headerLabel.innerText = "COMMERCIËLE KANS";
 
-    // Main Title (Italic, Big)
+    // Titel
     const titleEl = document.createElement('h2');
-    titleEl.className = "comm-main-title";
+    titleEl.className = "text-white font-extrabold italic text-2xl leading-none mt-2 mb-3 tracking-tight";
+    titleEl.style.textShadow = "0 0 15px rgba(124, 77, 255, 0.4)";
     titleEl.innerText = opportunity.title;
 
     // Suggestie Box
     const boxEl = document.createElement('div');
     boxEl.className = "action-product-box";
     boxEl.innerHTML = `
-        <div class="action-label">Actie Product:</div>
-        <div class="action-product-name">${opportunity.suggestion}</div>
-        <div class="action-quote">"${opportunity.reason}"</div>
+        <div class="text-xs font-bold text-purple-400 uppercase mb-1">Actie Product:</div>
+        <div class="text-white font-bold text-lg mb-1">${opportunity.suggestion}</div>
+        <div class="text-xs text-gray-400 italic leading-snug">"${opportunity.reason}"</div>
     `;
 
     // Footer Checklist
     const footerEl = document.createElement('div');
-    footerEl.className = "checklist-footer";
+    footerEl.className = "checklist-footer mt-auto";
     footerEl.innerHTML = `
-        <i class="fas fa-list-ul checklist-icon"></i>
-        <div class="checklist-text">
+        <i class="fas fa-list-ul text-purple-400 text-lg mr-2"></i>
+        <div class="uppercase font-bold text-[0.65rem] tracking-wide leading-tight text-gray-300">
             ${opportunity.checklist}
         </div>
     `;
@@ -1332,7 +1286,6 @@ function renderCommercialCard(weatherData) {
     const contentContainer = document.getElementById('comm-content-container');
     if (contentContainer) {
         contentContainer.innerHTML = '';
-        contentContainer.appendChild(headerLabel);
         contentContainer.appendChild(titleEl);
         contentContainer.appendChild(boxEl);
         contentContainer.appendChild(footerEl);
