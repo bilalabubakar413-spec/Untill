@@ -704,8 +704,50 @@ const pairingRules = [
         reason: "Een ijskoude Cola smaakt het best bij een burger."
     }
 ];
+// 0. FLAVOR PROFILE ANALYZER
+// Bekijkt de hele bon en telt ingrediënten (keywords).
+function analyzeFlavorProfile(cart) {
+    const items = Object.values(cart);
+    let counts = { kip: 0, kaas: 0, pittig: 0, vega: 0 };
+
+    items.forEach(item => {
+        const n = item.name.toLowerCase();
+        // Kip check
+        if (n.includes('kip') || n.includes('chicken') || n.includes('wings') || n.includes('nuggets')) counts.kip++;
+        // Kaas check
+        if (n.includes('kaas') || n.includes('cheese') || n.includes('mozarella') || n.includes('brie')) counts.kaas++;
+        // Pittig check
+        if (n.includes('pittig') || n.includes('spicy') || n.includes('hete') || n.includes('peper')) counts.pittig++;
+        // Vega check
+        if (n.includes('vega') || n.includes('plant') || n.includes('no beef')) counts.vega++;
+    });
+
+    return counts;
+}
+
 function getSmartUpsellAdvice(cart, context) {
     const items = Object.values(cart);
+
+    // 0. CHECK FLAVOR PROFILE (Hoge prioriteit)
+    const flavor = analyzeFlavorProfile(cart);
+
+    // A. KIP LIEFHEBBER (>= 2 kip items) -> Suggesteer Kip Loempia
+    if (flavor.kip >= 2 && !contains(cart, "Kip Loempia")) {
+        return {
+            title: "Kip Liefhebber?",
+            reason: "U houdt van kip! Probeer ook onze huisgemaakte Kip Loempia's.",
+            product: { name: "Kip Loempia's (2st)", price: 4.50, type: "food" }
+        };
+    }
+
+    // B. KAAS MONSTER (>= 2 kaas items) -> Suggesteer Kaasstengels
+    if (flavor.kaas >= 2 && !contains(cart, "Kaasstengels")) {
+        return {
+            title: "Kaas aanval!",
+            reason: "Voor de echte kaasfan: krokante Kaasstengels.",
+            product: { name: "Kaasstengels (6st)", price: 5.50, type: "food" }
+        };
+    }
 
     // 1. Loop door alle regels (Matrix)
     for (const rule of pairingRules) {
@@ -1132,28 +1174,28 @@ const commercialOpportunities = [
         id: "knuffeldag",
         trigger: "special_day",
         eventName: "Knuffeldag",
-        title: "KNUFFEL MET KOFFIE",
-        suggestion: "Warme Choco + Slagroom",
-        reason: "Op Knuffeldag zoeken gasten warmte en gezelligheid.",
-        checklist: "Zet extra slagroom klaar en instrueer bediening."
+        title: "VANDAAG IS: KNUFFELDAG",
+        suggestion: "Warme Choco + Gratis Knuffel",
+        reason: "Geef elke gast een warme glimlach (of knuffel) bij hun bestelling!",
+        checklist: "Instrueer team: Extra vriendelijkheid & gratis slagroom."
     },
     {
         id: "complimentendag",
         trigger: "special_day",
         eventName: "Complimentendag",
-        title: "COMPLIMENTEN & KLASSIEKERS",
-        suggestion: "Complimenten-Borrelplank",
-        reason: "Vanwege Complimentendag geven we een positieve boost.",
-        checklist: "Zorg voor voldoende borrelhapjes en instrueer team."
+        title: "VANDAAG IS: COMPLIMENTENDAG",
+        suggestion: "Complimentje van de Chef",
+        reason: "Geef bij elk drankje een welgemeend compliment aan de gast.",
+        checklist: "Briefing: Iedereen geeft minimaal 5 complimentjes vandaag."
     },
     {
         id: "valentijn",
         trigger: "special_day",
         eventName: "Valentijnsdag",
-        title: "LOVE IS IN THE AIR",
-        suggestion: "Love Cocktail (Gin & Tonic Pink)",
-        reason: "Verliefde stellen geven makkelijker geld uit aan specials.",
-        checklist: "Zet rozen op tafel en promoot de cocktailkaart."
+        title: "VANDAAG IS: VALENTIJNSDAG",
+        suggestion: "Love Cocktail (2 rietjes)",
+        reason: "Stimuleer romantiek: 'Speciaal voor jullie samen'.",
+        checklist: "Zet rozen op tafel en check de kaarsjes."
     },
 
     // --- WEER EVENTS ---
@@ -1161,29 +1203,29 @@ const commercialOpportunities = [
         id: "rainy_day",
         trigger: "weather",
         condition: "rain",
-        title: "BINNEN SCHUILEN",
-        suggestion: "Speciale Herfstlatte",
-        reason: "Door de regen en lage temperatuur zoeken gasten warmte.",
-        checklist: "Stel de koffiemachine bij en plaats actiebord binnen."
+        title: "VANDAAG: BINNEN SCHUILEN",
+        suggestion: "Herfstlatte & Gezelligheid",
+        reason: "Het regent! Maak het binnen extra knus voor de gasten.",
+        checklist: "Check verlichting, muziekje aan en verwarming graadje hoger."
     },
     {
         id: "sunny_terrace",
         trigger: "weather",
         condition: "sun",
-        title: "TERRAS TOPPERS",
-        suggestion: "Huisgemaakte Ice Tea",
-        reason: "De zon schijnt! Iedereen wil verfrissing op het terras.",
-        checklist: "Check ijsblokjes machine en muntvoorraad."
+        title: "VANDAAG: TERRAS WEER",
+        suggestion: "Zonnebril & Ice Tea",
+        reason: "Iedereen wil zon. Zorg voor snelle service buiten.",
+        checklist: "Terras schoon? IJsblokjes machine vol? Gaan!"
     },
 
     // --- FALLBACK ---
     {
         id: "general_sales",
         trigger: "always",
-        title: "HARDLOPERS OMHOOG",
-        suggestion: "Chef's Burger Special",
-        reason: "Geen bijzonderheden vandaag? Focus op de favoriet.",
-        checklist: "Geen speciale actie, focus op upsell bij tafel."
+        title: "FOCUS VANDAAG: HARDLOPERS",
+        suggestion: "Onze Bestseller Burger",
+        reason: "Maak van elke gast een fan met onze klassieker.",
+        checklist: "Focus op kwaliteit en upsell van drankjes."
     }
 ];
 
