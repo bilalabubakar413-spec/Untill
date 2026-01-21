@@ -218,7 +218,10 @@ const productsData = {
         { name: 'Portie Oude Kaas', price: 7.50, type: 'food' },
         { name: 'Portie Salami', price: 7.50, type: 'food' },
         { name: 'Yakitori Spiesjes', price: 8.50, type: 'food' },
-        { name: 'Calamaris', price: 7.50, type: 'food' }
+        { name: 'Calamaris', price: 7.50, type: 'food' },
+        { name: 'Kip Loempia\'s (2st)', price: 4.50, type: 'food' },
+        { name: 'Kaas Loempia\'s (6st)', price: 6.50, type: 'food' },
+        { name: 'Kaasstengels (6st)', price: 5.50, type: 'food' }
     ]
 };
 
