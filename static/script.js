@@ -735,7 +735,35 @@ function getSmartUpsellAdvice(cart, context) {
         }
     }
 
-    // 2. Geen specifieke regel? Check op 'Kale' bestellingen
+    // 2. Geen specifieke product-pairing regel? Check dan Weer-advies (Start van bestelling)
+    // "Dat had je eerst ook": Als de bon nog leeg is of nog geen pairings heeft, geef weer-advies.
+    if (!context || !context.weather) {
+        // Fallback als context mist (zou niet moeten, maar voor veiligheid)
+    } else {
+        const w = context.weather;
+        // Checken of we een weersadvies moeten geven
+        // Als het regent en < 15 graden -> Warme Choco
+        const isRainy = (w.weather_code >= 51 && w.weather_code <= 67) || (w.weather_code >= 80 && w.weather_code <= 82);
+        const temp = w.temperature_2m || 10;
+
+        if (items.length <= 2) { // Alleen in beginstadium (niet storen als ze al 20 dingen bestellen)
+            if (isRainy || temp < 12) {
+                return {
+                    title: "Koud & Nat buiten?",
+                    reason: "Perfect weer voor een Warme Choco met Slagroom!",
+                    product: { name: "Warme Choco", price: 3.50, type: "drink" }
+                };
+            } else if (temp > 20) {
+                return {
+                    title: "Warm weer!",
+                    reason: "Een koude Ice Tea Green lest de dorst.",
+                    product: { name: "Ice Tea Green", price: 3.20, type: "drink" }
+                };
+            }
+        }
+    }
+
+    // 3. Geen specifieke regel? Check op 'Kale' bestellingen
     const hasDrinks = items.some(i => i.type === 'drink');
     const hasFood = items.some(i => i.type === 'food');
 
@@ -1156,6 +1184,17 @@ const commercialOpportunities = [
         checklist: "Zet rozen op tafel en promoot de cocktailkaart."
     },
 
+    // --- CONCERT / EVENT KANSEN (Specific) ---
+    {
+        id: "lifetimes_party",
+        trigger: "event_match",
+        eventKeyword: "Katy Perry",
+        title: "LIFETIMES PRE-PARTY",
+        suggestion: "Katy Perry Pink Cocktail",
+        reason: "Concertbezoekers zoeken een sfeervolle plek voor pre-drinks; een thema-item verhoogt de aantrekkingskracht en omzet.",
+        checklist: "STEL EEN KATY PERRY PLAYLIST SAMEN EN ZORG VOOR VOLDOENDE KLEURRIJKE GARNERING VOOR DE THEMACOCKTAILS."
+    },
+
     // --- WEER EVENTS ---
     {
         id: "rainy_day",
@@ -1208,6 +1247,13 @@ function rankOpportunities(context) {
     if (specialEventName) {
         // Zoek de opportunity die hierbij hoort
         const match = commercialOpportunities.find(o => o.trigger === 'special_day' && o.eventName === specialEventName);
+        if (match) return match;
+    }
+
+    // A2. Check Local Events (Concerten etc)
+    // We kijken of er een event in localEvents zit dat matcht met een opportunity
+    for (const evt of localEvents) {
+        const match = commercialOpportunities.find(o => o.trigger === 'event_match' && evt.name.includes(o.eventKeyword));
         if (match) return match;
     }
 
