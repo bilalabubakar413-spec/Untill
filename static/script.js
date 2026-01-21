@@ -1111,6 +1111,184 @@ const localEvents = [
 ];
 
 // ==========================================================================
+// MANAGER AI: COMMERCIËLE KANSEN (DAGELIJKSE KANS)
+// ==========================================================================
+
+// 1. Kalender met speciale dagen
+const specialDays = {
+    "01-21": "Knuffeldag", // Ochtend na Blue Monday
+    "02-14": "Valentijnsdag",
+    "03-01": "Complimentendag",
+    "04-27": "Koningsdag",
+    "12-25": "Eerste Kerstdag",
+    "12-26": "Tweede Kerstdag",
+    "12-31": "Oudejaarsdag"
+};
+
+// 2. Database met Kansen
+const commercialOpportunities = [
+    // --- KALENDER EVENTS ---
+    {
+        id: "knuffeldag",
+        trigger: "special_day",
+        eventName: "Knuffeldag",
+        title: "KNUFFEL MET KOFFIE",
+        suggestion: "Warme Choco + Slagroom",
+        reason: "Op Knuffeldag zoeken gasten warmte en gezelligheid.",
+        checklist: "Zet extra slagroom klaar en instrueer bediening."
+    },
+    {
+        id: "complimentendag",
+        trigger: "special_day",
+        eventName: "Complimentendag",
+        title: "COMPLIMENTEN & KLASSIEKERS",
+        suggestion: "Complimenten-Borrelplank",
+        reason: "Vanwege Complimentendag geven we een positieve boost.",
+        checklist: "Zorg voor voldoende borrelhapjes en instrueer team."
+    },
+    {
+        id: "valentijn",
+        trigger: "special_day",
+        eventName: "Valentijnsdag",
+        title: "LOVE IS IN THE AIR",
+        suggestion: "Love Cocktail (Gin & Tonic Pink)",
+        reason: "Verliefde stellen geven makkelijker geld uit aan specials.",
+        checklist: "Zet rozen op tafel en promoot de cocktailkaart."
+    },
+
+    // --- WEER EVENTS ---
+    {
+        id: "rainy_day",
+        trigger: "weather",
+        condition: "rain",
+        title: "BINNEN SCHUILEN",
+        suggestion: "Speciale Herfstlatte",
+        reason: "Door de regen en lage temperatuur zoeken gasten warmte.",
+        checklist: "Stel de koffiemachine bij en plaats actiebord binnen."
+    },
+    {
+        id: "sunny_terrace",
+        trigger: "weather",
+        condition: "sun",
+        title: "TERRAS TOPPERS",
+        suggestion: "Huisgemaakte Ice Tea",
+        reason: "De zon schijnt! Iedereen wil verfrissing op het terras.",
+        checklist: "Check ijsblokjes machine en muntvoorraad."
+    },
+
+    // --- FALLBACK ---
+    {
+        id: "general_sales",
+        trigger: "always",
+        title: "HARDLOPERS OMHOOG",
+        suggestion: "Chef's Burger Special",
+        reason: "Geen bijzonderheden vandaag? Focus op de favoriet.",
+        checklist: "Geen speciale actie, focus op upsell bij tafel."
+    }
+];
+
+// 3. Logic: Kies de beste kans
+function rankOpportunities(context) {
+    // A. Check Speciale Dag
+    // Voor demo doeleinden: Gebruik VANDAAG (echte datum)
+    const now = new Date();
+    // Forceer even '01-21' (Knuffeldag) of '03-01' (Complimentendag) voor demo als de datum niet klopt?
+    // Nee, we doen het netjes.
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const dateKey = `${month}-${day}`;
+
+    // OF: Als de user expliciet vroeg om "Knuffeldag" simulatie, kunnen we dat hier 'mocken' als toggle.
+    // Voor nu: Echte datum, tenzij...
+
+    // Voor DEMO effect: Als het vandaag géén special day is, en het regent ook niet...
+    // Laten we kijken of er een match is.
+    const specialEventName = specialDays[dateKey]; // bv "Knuffeldag" of undefined
+
+    if (specialEventName) {
+        // Zoek de opportunity die hierbij hoort
+        const match = commercialOpportunities.find(o => o.trigger === 'special_day' && o.eventName === specialEventName);
+        if (match) return match;
+    }
+
+    // B. Check Weer (Rain/Sun)
+    // context.weatherCode komt van OpenMeteo (bv. > 50 is vaak regen/bewolkt)
+    // We gebruiken de property 'rainy' die we in loadManagerData berekenen.
+    if (context.isRainy) {
+        return commercialOpportunities.find(o => o.id === 'rainy_day');
+    }
+    if (context.temp > 18) { // Simpele check voor zon/warm
+        return commercialOpportunities.find(o => o.id === 'sunny_terrace');
+    }
+
+    // C. Fallback
+    return commercialOpportunities.find(o => o.id === 'general_sales');
+}
+
+
+// 4. Render Functie
+function renderCommercialCard(weatherData) {
+    const container = document.querySelector('.commercial-card');
+    if (!container) return;
+
+    // Bepaal context voor logic
+    const isRainy = weatherData ? isRainyOpenMeteo(weatherData.weather_code, weatherData.precipitation) : false;
+    const temp = weatherData ? weatherData.temperature_2m : 10;
+
+    // KIES DE KANS
+    // Voor DEMO: We kunnen hier 'fake' context meegeven om Knuffeldag te forceren als we willen
+    // Maar laten we eerlijk zijn: de user wil dat AI het "herkent".
+    // Als we vandaag NIET op 21 jan zitten, ziet hij het niet.
+    // TRUCJE: We simuleren dat het vandaag 21 januari is als de user dat wil?
+    // Nee, we gebruiken de ECHTE datum.
+    // ECHTER: Om de feature te tonen aan de user (die net "Knuffeldag" noemde),
+    // zal ik een override inbouwen als de 'echte' datum niks oplevert,
+    // OF we voegen 'vandaag' (21 januari in mijn virtuele tijd/of echte tijd) toe aan de kalender.
+    // Mijn system time is 2026-01-21. Dus "01-21" is VANDAAG! (Knuffeldag in mijn lijstje).
+    // Dus het zou automagisch moeten werken! :D
+
+    const opportunity = rankOpportunities({ isRainy, temp });
+
+    if (!opportunity) return; // Should not happen due to fallback
+
+    // HTML Bouwen
+
+    // Titel
+    const titleEl = document.createElement('h2');
+    titleEl.className = "text-white font-bold text-xl leading-tight mt-2 mb-2";
+    titleEl.style.textShadow = "0 0 10px rgba(124, 77, 255, 0.5)";
+    titleEl.innerText = opportunity.title;
+
+    // Suggestie Box
+    const boxEl = document.createElement('div');
+    boxEl.className = "action-product-box";
+    boxEl.innerHTML = `
+        <div class="text-xs font-bold text-purple-300 uppercase mb-1">AI Suggestie:</div>
+        <div class="text-white font-bold text-sm">${opportunity.suggestion}</div>
+        <div class="text-xs text-gray-400 mt-1 italic">"${opportunity.reason}"</div>
+    `;
+
+    // Footer Checklist
+    const footerEl = document.createElement('div');
+    footerEl.className = "checklist-footer mt-auto";
+    footerEl.innerHTML = `
+        <i class="fas fa-check-square text-green-400"></i>
+        <div class="uppercase font-bold text-[0.65rem] tracking-wide leading-tight text-gray-400">
+            ${opportunity.checklist}
+        </div>
+    `;
+
+    // Injecteren (verwijder loading state)
+    const contentContainer = document.getElementById('comm-content-container');
+    if (contentContainer) {
+        contentContainer.innerHTML = '';
+        contentContainer.appendChild(titleEl);
+        contentContainer.appendChild(boxEl);
+        contentContainer.appendChild(footerEl);
+    }
+}
+
+// ==========================================================================
 // MANAGER: EVENTS (fix "lelijk icoon links bij ACTIE")
 // ==========================================================================
 // const localEvents defined above (lines 823-838), keeping it.
@@ -1284,6 +1462,17 @@ async function loadManagerData() {
 
         renderManagerEvents();
         renderManagerChart();
+        // Render Commercial Opportunities (passes weather info)
+        if (weatherBox) {
+            try {
+                const w = await fetchAmsterdamWeather();
+                renderCommercialCard(w);
+            } catch (e) {
+                renderCommercialCard(null); // Fallback
+            }
+        } else {
+            renderCommercialCard(null);
+        }
     }, 700);
 }
 

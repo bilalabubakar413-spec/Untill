@@ -256,26 +256,22 @@
       <!-- Body -->
       <div class="manager-body">
 
-        <!-- Card 1: Crowd Forecast (Purple Theme) -->
-        <div class="m-card crowd-card">
-          <div class="card-bg-blur"></div>
-          <div class="card-header">
-            <h3 class="card-title">Verwachte Drukte (18:00 - 21:00)</h3>
-            <i class="fas fa-users text-gray-600"></i>
+        <!-- Card 1: Commercial Opportunities (Dagelijkse Kans) -->
+        <div class="m-card commercial-card">
+          <!-- Background Glow Effect -->
+          <div class="comm-glow"></div>
+
+          <div class="card-header mb-1">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-bolt text-purple-400"></i>
+              <span class="text-xs font-bold text-purple-200 uppercase tracking-wider">Dagelijkse Kans</span>
+            </div>
           </div>
 
-          <div class="big-stat-row">
-            <span class="big-stat-val">+22%</span>
-            <span class="big-stat-sub">vs. gemiddeld</span>
-          </div>
-
-          <div class="ai-action-box">
-            <i class="fas fa-lightbulb text-yellow-400 mt-1"></i>
-            <div>
-              <div class="text-white font-bold text-sm mb-1 uppercase tracking-wide">AI Actiepunt</div>
-              <div class="text-gray-300 text-sm leading-tight" id="ai-crowd-text">
-                <span class="animate-pulse">Data analyseren...</span>
-              </div>
+          <div id="comm-content-container" class="flex flex-col h-full relative z-10">
+            <!-- Loading State -->
+            <div class="flex-1 flex flex-col justify-center items-center text-gray-500 animate-pulse">
+              <span class="text-xs font-bold uppercase">Kansen berekenen...</span>
             </div>
           </div>
         </div>
